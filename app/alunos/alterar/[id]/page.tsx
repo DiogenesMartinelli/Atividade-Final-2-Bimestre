@@ -2,15 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { pb } from "@/lib/pocketbase";
-
-type Aluno = {
-    id: string;
-    nome: string;
-    idade: string;
-    email: string;
-    telefone: string;
-}
+import { getAluno, updateAluno, type Aluno } from "@/lib/alunos-api";
+import ScreenShell from "../../../components/ScreenShell";
 
 export default function AlterarAluno() {
     const { id } = useParams<{ id: string }>();
@@ -18,54 +11,55 @@ export default function AlterarAluno() {
     const [aluno, setAluno] = useState<Aluno | null>(null);
 
     useEffect(() => {
-        pb.collection("tb_aluno")
-            .getOne<Aluno>(id, { requestKey: null })
+        getAluno(id)
             .then(setAluno);
     }, [id]);
 
     async function salvar(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
         const dados = new FormData(e.currentTarget);
-        await pb.collection("tb_aluno").update(id, {
-            nome: dados.get("nome"),
-            idade: dados.get("idade"),
-            email: dados.get("email"),
-            telefone: dados.get("telefone"),
+        await updateAluno(id, {
+            nome: String(dados.get("nome") ?? ""),
+            idade: String(dados.get("idade") ?? ""),
+            email: String(dados.get("email") ?? ""),
+            telefone: String(dados.get("telefone") ?? ""),
         });
         alert("Aluno Alterado");
         router.push("/alunos/consulta");
     }
 
-    const campo = "w-full rounded shadow-sm sm:text-sm bg-white p-2 text-black mt-2";
+    const campo = "w-full rounded-lg border border-white/15 bg-white/10 p-3 text-white placeholder:text-white/50 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30";
 
     return (
-        <div className="bg-purple-300 h-screen">
-            <div className="w-[50%] mx-auto">
-                <h1 className="text-black text-xl pt-6">Alterar aluno</h1>
-                {aluno && (
-                    <form onSubmit={salvar} className="w-full">
-                        <input type="text" name="nome" defaultValue={aluno.nome} placeholder="Nome do aluno" className={campo} />
-                        <input type="text" name="idade" defaultValue={aluno.idade} placeholder="Idade do aluno" className={campo} />
-                        <input type="text" name="email" defaultValue={aluno.email} placeholder="E-mail do aluno" className={campo} />
-                        <input type="text" name="telefone" defaultValue={aluno.telefone} placeholder="Telefone do aluno" className={campo} />
-                        <div className="flex gap-2 mt-4">
-                            <button
-                                type="submit"
-                                className="rounded-lg px-4 py-2 bg-linear-to-r/srgb from-indigo-500 to-teal-400"
-                            >
-                                Salvar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => router.push("/alunos/consulta")}
-                                className="rounded-lg px-4 py-2 bg-gray-300 text-black"
-                            >
-                                Cancelar
-                            </button>
-                        </div>
-                    </form>
-                )}
-            </div>
-        </div>
+        <ScreenShell
+            eyebrow="Alunos"
+            title="Alterar aluno"
+            backHref="/alunos/consulta"
+            maxWidth="max-w-xl"
+        >
+            {aluno && (
+                <form onSubmit={salvar} className="space-y-4">
+                    <input type="text" name="nome" defaultValue={aluno.nome} placeholder="Nome do aluno" className={campo} aria-label="Nome do aluno" />
+                    <input type="text" name="idade" defaultValue={aluno.idade} placeholder="Idade do aluno" className={campo} aria-label="Idade do aluno" />
+                    <input type="text" name="email" defaultValue={aluno.email} placeholder="E-mail do aluno" className={campo} aria-label="E-mail do aluno" />
+                    <input type="text" name="telefone" defaultValue={aluno.telefone} placeholder="Telefone do aluno" className={campo} aria-label="Telefone do aluno" />
+                    <div className="flex flex-wrap gap-3 pt-2">
+                        <button
+                            type="submit"
+                            className="rounded-xl bg-gradient-to-r from-purple-600 to-cyan-400 px-5 py-3 font-semibold text-white shadow-lg shadow-purple-900/30 transition hover:scale-[1.01] hover:shadow-cyan-400/40"
+                        >
+                            Salvar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => router.push("/alunos/consulta")}
+                            className="rounded-xl border border-white/20 px-5 py-3 font-semibold text-white transition hover:bg-white/10"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            )}
+        </ScreenShell>
     )
 }
